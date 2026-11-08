@@ -15,3 +15,4 @@ idf_component_register(
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-error -Wno-type-limits -Wno-sign-compare)
+target_compile_definitions(${COMPONENT_LIB} PRIVATE ESP32=1)

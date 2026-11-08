@@ -546,6 +546,9 @@ INT8 free_ac_context()
         ir_free(context->checksum.checksum_data);
         context->checksum.checksum_data = NULL;
     }
+    context->checksum.count = 0;
+
+    ir_memset(context, 0, sizeof(t_ac_protocol));
 
     return IR_DECODE_SUCCEEDED;
 }

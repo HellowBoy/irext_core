@@ -62,10 +62,13 @@ UINT16 add_delaycode(UINT8 index)
             {
                 for (j = 0; j < context->dc[i].time_cnt; j++)
                 {
-                    context->time[context->code_cnt++] = context->dc[i].time[j];
+                    if (context->code_cnt < USER_DATA_SIZE)
+                    {
+                        context->time[context->code_cnt++] = context->dc[i].time[j];
+                    }
                 }
             }
-            else if (context->dc[i].pos == -1)
+            else if ((INT16)context->dc[i].pos == -1 || context->dc[i].pos == (UINT16)-1)
             {
                 tail_delay_code = 1;
                 tail_pos = i;
@@ -75,7 +78,10 @@ UINT16 add_delaycode(UINT8 index)
 
     if ((context->last_bit == 0) && (index == (ir_hex_len - 1)))
     {
-        context->time[context->code_cnt++] = context->one.low; //high
+        if (context->code_cnt < USER_DATA_SIZE)
+        {
+            context->time[context->code_cnt++] = context->one.low; //high
+        }
     }
 
     if (context->dc_cnt != 0)
@@ -84,7 +90,10 @@ UINT16 add_delaycode(UINT8 index)
         {
             for (i = 0; i < context->dc[tail_pos].time_cnt; i++)
             {
-                context->time[context->code_cnt++] = context->dc[tail_pos].time[i];
+                if (context->code_cnt < USER_DATA_SIZE)
+                {
+                    context->time[context->code_cnt++] = context->dc[tail_pos].time[i];
+                }
             }
         }
     }
@@ -105,7 +114,10 @@ UINT16 create_ir_frame()
     // boot code
     for (i = 0; i < context->boot_code.len; i++)
     {
-        context->time[context->code_cnt++] = context->boot_code.data[i];
+        if (context->code_cnt < USER_DATA_SIZE)
+        {
+            context->time[context->code_cnt++] = context->boot_code.data[i];
+        }
     }
 
     for (i = 0; i < ir_hex_len; i++)
@@ -120,13 +132,19 @@ UINT16 create_ir_frame()
 
             if (ir_data[i] & mask)
             {
-                context->time[context->code_cnt++] = context->one.low;
-                context->time[context->code_cnt++] = context->one.high;
+                if (context->code_cnt + 2 <= USER_DATA_SIZE)
+                {
+                    context->time[context->code_cnt++] = context->one.low;
+                    context->time[context->code_cnt++] = context->one.high;
+                }
             }
             else
             {
-                context->time[context->code_cnt++] = context->zero.low;
-                context->time[context->code_cnt++] = context->zero.high;
+                if (context->code_cnt + 2 <= USER_DATA_SIZE)
+                {
+                    context->time[context->code_cnt++] = context->zero.low;
+                    context->time[context->code_cnt++] = context->zero.high;
+                }
             }
         }
         add_delaycode((UINT8) i);
@@ -134,11 +152,17 @@ UINT16 create_ir_frame()
 
     frame_length = context->code_cnt;
 
-    for (i = 0; i < (context->repeat_times - 1); i++)
+    if (context->repeat_times > 1)
     {
-        for (j = 0; j < frame_length; j++)
+        for (i = 0; i < (context->repeat_times - 1); i++)
         {
-            context->time[context->code_cnt++] = context->time[j];
+            for (j = 0; j < frame_length; j++)
+            {
+                if (context->code_cnt < USER_DATA_SIZE)
+                {
+                    context->time[context->code_cnt++] = context->time[j];
+                }
+            }
         }
     }
 
